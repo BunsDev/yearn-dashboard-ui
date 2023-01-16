@@ -30,9 +30,9 @@ interface ICallbacks {
 async function start(options: IStartOptions, callbacks?: ICallbacks) {
 	const vaults = await getCache();
 	if(vaults.length > 0 && callbacks?.cacheReady) callbacks.cacheReady(new Date(), vaults);
-	refresh(callbacks);
-	setInterval(() => {
-		refresh(callbacks);
+	await refresh(callbacks);
+	setInterval(async () => {
+		await refresh(callbacks);
 	}, options.refreshInterval);
 }
 

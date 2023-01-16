@@ -4,6 +4,7 @@ import useLocalStorage from '../utils/useLocalStorage';
 import Dialog from './Dialog';
 import Header from './Header';
 import CheckForUpdates from './CheckForUpdates';
+import ReportError from './ReportError';
 
 const	ChromeContext = createContext();
 export const useChrome = () => useContext(ChromeContext);
@@ -33,6 +34,7 @@ export default function Chrome({children}) {
 					absolute z-10 w-full min-h-full flex flex-col`}>
 					<Header />
 					<CheckForUpdates />
+					<ReportError />
 					{children}
 				</div>
 				<AnimatePresence>

@@ -4,6 +4,7 @@ import * as ySeafood from './types';
 import {api} from './worker';
 import {hydrateBigNumbersRecursively} from '../../utils/utils';
 import useLocalStorage from 'use-local-storage';
+import {useErrorHandler} from '../useErrorHandler';
 
 interface IVaultsContext {
 	loading: boolean,
@@ -23,6 +24,7 @@ const	VaultsContext = createContext<IVaultsContext>({
 export const useVaults = () => useContext(VaultsContext);
 
 export default function VaultsProvider({children}: {children: ReactNode}) {
+	const {handleError} = useErrorHandler();
 	const [loading, setLoading] = useState(false);
 	const [cachetime, setCachetime] = useLocalStorage<Date>('context/usevaults/cachetime', new Date(0), {
 		parser: str => new Date(JSON.parse(str))
@@ -31,8 +33,13 @@ export default function VaultsProvider({children}: {children: ReactNode}) {
 
 	const worker = useMemo(() => {
 		const worker = new Worker(new URL('./worker.ts', import.meta.url));
+		worker.onmessage = (m: MessageEvent) => {
+			if(m.data?.value?.isError) {
+				handleError(m.data.value.value);
+			}
+		};
 		return Comlink.wrap<typeof api>(worker);
-	}, []);
+	}, [handleError]);
 
 	const callbacks = useMemo(() => {
 		return {
@@ -55,7 +62,7 @@ export default function VaultsProvider({children}: {children: ReactNode}) {
 		worker.start({refreshInterval: 5 * 60 * 1000}, Comlink.proxy(callbacks));
 	}, [worker, callbacks]);
 
-	const refresh = useCallback(() => {
+	const refresh = useCallback(async () => {
 		worker.refresh(Comlink.proxy(callbacks));
 	}, [worker, callbacks]);
 
